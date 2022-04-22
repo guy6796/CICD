@@ -1,0 +1,56 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+trigger:
+- master
+stages:
+- stage: 'Build_Stage' 
+  displayName: 'Build' #Name displayed when viewing in Azure DevOps
+  jobs:
+  - job: 'Build_Job' 
+    displayName: 'Application Build' #Name displayed when viewing in Azure DevOps
+    pool:
+      name: StagingPool
+  
+    steps:
+    - template: templates/CITemplate.yaml
+    
+    
+
+
+- stage: 'Staging' 
+  variables:
+  - group: envStage
+  displayName: 'Staging' #Name displayed when viewing in Azure DevOps
+  dependsOn: ['Build_Stage'] #List of previous stages that must complete before this stage runs
+  jobs:
+  - deployment: Deploy_Staging 
+    displayName: Staging Deployment #Name displayed in UI
+    pool:
+      name: StagingPool 
+    environment: Staging
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - template: templates/CDTemplate.yaml
+
+
+          
+- stage: 'Production' 
+  variables:
+  - group: envProd
+  displayName: 'Production' #Name displayed when viewing in Azure DevOps
+  dependsOn: ['Build_Stage', 'Staging'] #List of previous stages that must complete before this stage runs
+  jobs:
+  - deployment: Deploy_Production 
+    displayName: Production Deployment #Name displayed in UI
+    pool:
+      name: ProductionPool 
+    environment: Production
+    strategy:
+      runOnce:
+        deploy:
+          steps:  
+          - template: templates/CDTemplate.yaml      

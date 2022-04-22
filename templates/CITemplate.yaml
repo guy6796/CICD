@@ -1,0 +1,45 @@
+
+
+
+
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '14.x'
+      displayName: 'Install Node.js 14'
+
+
+
+
+    - task: Npm@1
+      inputs:
+        command: 'ci'
+        workingDir: '$(build.sourcesdirectory)'
+      displayName: "install dependencies for the app"
+
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: '$(build.sourcesdirectory)'
+        includeRootFolder: true
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/bootcamp.zip'
+        replaceExistingArchive: true
+      displayName: "Creating zip file and moving to agent's Artifact directory from source"
+
+      
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)/bootcamp.zip' 
+        artifactName: 'bootcamp-app'
+      displayName: 'Publish Artifact'
+
+
+    - task: UniversalPackages@0
+      inputs:
+          command: 'publish'
+          publishDirectory: '$(Build.ArtifactStagingDirectory)'
+          feedsToUsePublish: 'internal'
+          vstsFeedPublish: '40a8d693-43e7-4d3c-b58e-d3cae2291e12/be6112bc-799a-41e4-909b-500909a53470'
+          vstsFeedPackagePublish: 'bootcamp-app'
+          versionOption: 'patch'
+      displayName: 'Publish Artiface in azure artifacts'

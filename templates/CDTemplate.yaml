@@ -1,0 +1,67 @@
+          steps:
+          - task: UniversalPackages@0
+            inputs:
+              command: 'download'
+              downloadDirectory: '$(System.ArtifactsDirectory)'
+              feedsToUse: 'internal'
+              vstsFeed: '40a8d693-43e7-4d3c-b58e-d3cae2291e12/be6112bc-799a-41e4-909b-500909a53470'
+              vstsFeedPackage: '4bb89539-7ba3-42e5-9f5c-b754ecf6e250'
+              vstsPackageVersion: '*.*.*'
+            displayName: "Downloading the package from azure artifacts"
+              
+          - task: ExtractFiles@1
+            inputs:
+              archiveFilePatterns: "$(Pipeline.Workspace)/bootcamp-app/bootcamp.zip"
+              destinationFolder: "$(Pipeline.Workspace)/files/"
+            displayName: "Extracting the build"
+
+          - task: CmdLine@2
+            inputs:
+              script: |
+                git clone https://github.com/GuyR53/AnsibleWeek6Code.git
+                rm -rf .git
+            displayName: "cloning ansible repo"
+
+          - task: CmdLine@2
+            inputs:
+              script: |
+                cd ../files/s
+                cat <<EOF >.env
+                # Host configuration
+                        
+                          PORT=8080
+                          HOST=0.0.0.0
+                          
+                          
+                          # Postgres
+                          PGHOST=$(PGHOST)
+                          PGUSERNAME=$(PGUSERNAMEE)
+                          PGDATABASE=$(PGDBNAME)
+                          PGPASSWORD=$(PGPASS)
+                          PGPORT=$(PGPORT)
+                          
+                          # Host Configurations
+                          HOST_URL=$(HOST_URL)
+                          COOKIE_ENCRYPT_PWD=superAwesomePasswordStringThatIsAtLeast32CharactersLong!
+                          NODE_ENV=development
+                                     
+                          # Okta configuration
+                           
+                          OKTA_ORG_URL=$(OKTAURL)
+                          OKTA_CLIENT_ID= $(OKTAID)
+                          OKTA_CLIENT_SECRET= $(OKTASECRET)
+                
+                EOF
+            displayName: "updating .env"
+          
+          - task: Ansible@0
+            inputs:
+              ansibleInterface: 'agentMachine'
+              playbookPathOnAgentMachine: '$(PlaybookPath)'
+              inventoriesAgentMachine: 'file'
+              inventoryFileOnAgentMachine: '$(InentoryPath)'
+              args: '--extra-vars server_env_group="$(HostType)"'
+              failOnStdErr: false
+            displayName: "playing ansible playbook"
+              
+
